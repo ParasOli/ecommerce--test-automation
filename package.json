@@ -15,5 +15,12 @@
   "bugs": {
     "url": "https://github.com/ParasOli/ecommerce--test-automation/issues"
   },
-  "homepage": "https://github.com/ParasOli/ecommerce--test-automation#readme"
+  "homepage": "https://github.com/ParasOli/ecommerce--test-automation#readme",
+  "dependencies": {
+    "dotenv": "^18.0.6"
+  },
+  "devDependencies": {
+    "cypress": "^14.5.4",
+    "typescript": "^5.9.3"
+  }
 }
