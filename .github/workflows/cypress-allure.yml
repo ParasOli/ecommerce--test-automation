@@ -11,34 +11,113 @@ concurrency:
   cancel-in-progress: true
 
 jobs:
-  test:
+  lint:
     runs-on: ubuntu-latest
-
     steps:
-      - name: Checkout
-        uses: actions/checkout@v4
+      - uses: actions/checkout@v4
 
-      - name: Setup Node
-        uses: actions/setup-node@v4
+      - uses: actions/setup-node@v4
         with:
           node-version: 22
           cache: npm
 
-      - name: Setup Java (for Allure CLI)
-        uses: actions/setup-java@v4
+      - run: npm ci
+        env:
+          CYPRESS_INSTALL_BINARY: 0
+
+      - name: Lint
+        run: npm run lint
+
+      - name: Check formatting
+        run: npm run format:check
+
+      - name: Type check
+        run: npx tsc --noEmit -p .
+
+  test:
+    name: test (${{ matrix.name }})
+    runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - name: chrome
+            browser: chrome
+            config: ''
+          - name: firefox
+            browser: firefox
+            config: ''
+          - name: mobile
+            browser: chrome
+            config: viewportWidth=375,viewportHeight=812
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
         with:
-          distribution: temurin
-          java-version: 17
+          node-version: 22
+          cache: npm
 
       - name: Run Cypress tests
         id: cypress
         uses: cypress-io/github-action@v6
         continue-on-error: true
         with:
-          browser: chrome
+          browser: ${{ matrix.browser }}
+          config: ${{ matrix.config }}
         env:
           USER_EMAIL: ${{ secrets.USER_EMAIL }}
           USER_PASSWORD: ${{ secrets.USER_PASSWORD }}
+
+      - name: Upload Allure results
+        uses: actions/upload-artifact@v4
+        with:
+          name: allure-results-${{ matrix.name }}
+          path: allure-results
+          if-no-files-found: ignore
+
+      - name: Upload screenshots on failure
+        if: steps.cypress.outcome == 'failure'
+        uses: actions/upload-artifact@v4
+        with:
+          name: cypress-screenshots-${{ matrix.name }}
+          path: cypress/screenshots
+          if-no-files-found: ignore
+
+      - name: Fail job if tests failed
+        if: steps.cypress.outcome == 'failure'
+        run: |
+          echo "Cypress tests failed on ${{ matrix.name }} - see the Allure report for details."
+          exit 1
+
+  report:
+    needs: test
+    if: always()
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+
+      - uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: 17
+
+      - run: npm ci
+        env:
+          CYPRESS_INSTALL_BINARY: 0
+
+      - name: Download Allure results from all runs
+        uses: actions/download-artifact@v4
+        with:
+          pattern: allure-results-*
+          path: allure-results
+          merge-multiple: true
 
       - name: Generate Allure report
         run: npm run allure:generate
@@ -49,26 +128,11 @@ jobs:
           name: allure-report
           path: allure-report
 
-      - name: Upload screenshots on failure
-        if: steps.cypress.outcome == 'failure'
-        uses: actions/upload-artifact@v4
-        with:
-          name: cypress-screenshots
-          path: cypress/screenshots
-          if-no-files-found: ignore
-
       - name: Deploy report to GitHub Pages
         uses: peaceiris/actions-gh-pages@v4
         with:
           github_token: ${{ secrets.GITHUB_TOKEN }}
           publish_branch: gh-pages
           publish_dir: allure-report
-          # replace the whole branch so only the latest run's report is shown
           keep_files: false
           force_orphan: true
-
-      - name: Fail job if tests failed
-        if: steps.cypress.outcome == 'failure'
-        run: |
-          echo "Cypress tests failed - see the Allure report for details."
-          exit 1

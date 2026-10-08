@@ -11,6 +11,7 @@ mochawesome-report/
 # Local environment / secrets
 .env
 .env.*
+!.env.example
 cypress.env.json
 
 # Logs

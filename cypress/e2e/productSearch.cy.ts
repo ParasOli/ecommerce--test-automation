@@ -1,60 +1,59 @@
-import productSearch from "../pages/productSearch"
+import * as allure from 'allure-js-commons'
+import homePage from '../pages/HomePage'
+import searchPage from '../pages/SearchPage'
 
 describe('Product Search', () => {
-
   it('TC-SEARCH-01: finds products by keyword from the header search bar', () => {
+    allure.severity('critical')
     const term = 'iphone'
-    cy.visit('/')
+    homePage.open()
 
-    productSearch.navSearch(term)
+    homePage.searchFromHeader(term)
 
-    productSearch.shouldBeOnResultsPage(term)
-    productSearch.shouldShowResultsMatching(term)
+    searchPage.verifyLoaded(term)
+    searchPage.verifyResultsMatch(term)
   })
 
   it('TC-SEARCH-02: finds products by keyword', () => {
     const term = 'ipod'
-    productSearch.open()
+    searchPage.open()
 
-    productSearch.searchByCriteria(term)
+    searchPage.search(term)
 
-    productSearch.shouldBeOnResultsPage(term)
-    productSearch.shouldShowResultsMatching(term)
+    searchPage.verifyLoaded(term)
+    searchPage.verifyResultsMatch(term)
   })
 
   it('TC-SEARCH-03: finds products by keyword within a category', () => {
-    // Note: the demo site does not actually narrow results by category,
-    // so this checks the category is applied, not that others are filtered out.
     const term = 'ipod'
-    productSearch.open()
+    searchPage.open()
 
-    productSearch.selectCategory('MP3 Players')
-    productSearch.searchByCriteria(term)
+    searchPage.selectCategory('MP3 Players')
+    searchPage.search(term)
 
-    productSearch.shouldBeOnResultsPage(term)
-    cy.url().should('include', 'category_id=34')
-    productSearch.categoryDropdown.find('option:selected').should('have.text', 'MP3 Players')
-    productSearch.shouldShowResultsMatching(term)
+    searchPage.verifyLoaded(term)
+    searchPage.verifyCategorySelected('MP3 Players')
+    searchPage.verifyResultsMatch(term)
   })
 
   it('TC-SEARCH-04: finds products by a word that only appears in the description', () => {
     const term = 'revolutionary'
-    productSearch.open()
+    searchPage.open()
 
-    productSearch.checkSearchInDescription()
-    productSearch.searchByCriteria(term)
+    searchPage.searchInDescriptions()
+    searchPage.search(term)
 
-    productSearch.shouldBeOnResultsPage(term)
-    productSearch.shouldShowProduct('iPhone')
+    searchPage.verifyLoaded(term)
+    searchPage.verifyProductShown('iPhone')
   })
 
   it('TC-SEARCH-05: shows a message when nothing matches', () => {
     const term = `noproduct${Date.now()}`
-    productSearch.open()
+    searchPage.open()
 
-    productSearch.searchByCriteria(term)
+    searchPage.search(term)
 
-    productSearch.shouldBeOnResultsPage(term)
-    productSearch.shouldShowNoResults()
+    searchPage.verifyLoaded(term)
+    searchPage.verifyNoResults()
   })
 })

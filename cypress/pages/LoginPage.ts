@@ -1,4 +1,7 @@
 class LoginPage {
+  noMatchError = 'Warning: No match for E-Mail Address and/or Password.'
+  lockedError = 'Warning: Your account has exceeded allowed number of login attempts.'
+
   get emailInput() {
     return cy.get('#input-email')
   }
@@ -38,13 +41,15 @@ class LoginPage {
     this.submit()
   }
 
-  verifyErrorMessage(message: string | RegExp) {
-    this.errorAlert.should('be.visible')
-    if (typeof message === 'string') {
-      this.errorAlert.should('contain.text', message)
-    } else {
-      this.errorAlert.invoke('text').should('match', message)
-    }
+  verifyNoMatchError() {
+    this.errorAlert.should('be.visible').and('contain.text', this.noMatchError)
+  }
+
+  verifyNoMatchOrLockedError() {
+    this.errorAlert.should('be.visible').and(($alert) => {
+      const text = $alert.text()
+      expect(text.includes(this.noMatchError) || text.includes(this.lockedError), text).to.equal(true)
+    })
   }
 }
 

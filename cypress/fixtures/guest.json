@@ -1,0 +1,10 @@
+{
+  "firstName": "John",
+  "lastName": "Smith",
+  "telephone": "5551234567",
+  "address": "12 Market Street",
+  "city": "Austin",
+  "postcode": "73301",
+  "country": "United States",
+  "region": "Texas"
+}
