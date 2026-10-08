@@ -22,7 +22,7 @@ Automated tests written in **Cypress + TypeScript**, with **Allure** reports pub
 | Product search | [`cypress/e2e/productSearch.cy.ts`](cypress/e2e/productSearch.cy.ts) | TC-SEARCH-01 to 05: header search, search page, search within a category, search in descriptions, no results                     |
 | Checkout       | [`cypress/e2e/checkout.cy.ts`](cypress/e2e/checkout.cy.ts)           | TC-CHECKOUT-01 to 04: empty cart, guest order, empty guest details, Terms & Conditions not accepted                              |
 
-Every UI test runs in **Chrome**, **Firefox** and **Chrome at phone size (375×812)** in CI.
+UI tests run in **Chrome** in CI. Firefox and phone-size runs are available locally with `npm run test:firefox` and `npm run test:mobile`.
 
 ### API
 
@@ -74,7 +74,7 @@ Each booking test is self-contained: it creates the booking it needs, with a uni
 ├── test-cases/               # Manual test cases (one .md per feature) + their source
 ├── .github/
 │   ├── workflows/
-│   │   ├── ui-tests.yml      # Lint, UI tests on 3 browsers, publish to /ui/
+│   │   ├── ui-tests.yml      # Lint, UI tests in Chrome, publish to /ui/
 │   │   └── api-tests.yml     # Lint, API tests, publish to /api/
 │   └── actions/publish-report/  # Shared step that updates the dashboard
 ├── .claude/agents/           # Claude Code agents (see below)
@@ -149,7 +149,7 @@ Each test in the report has:
 - **Epic / feature:** `E-commerce UI` → `Login`, `Product Search`, `Checkout`, or `Restful Booker API` → `Auth`, `Booking`
 - **Severity:** `critical` for the main happy paths (valid login, header search, guest order, API token, create, update and delete booking), `normal` for the rest
 - **Test ID:** the TC ID as a label. UI test IDs also link to the test cases sheet.
-- **Parameters (UI):** browser and viewport, so the Chrome, Firefox and mobile results show separately
+- **Parameters (UI):** browser and viewport, so results from different browsers or screen sizes show separately
 
 ## CI: GitHub Actions + dashboard
 
@@ -165,8 +165,8 @@ There are two workflows. Both run **only when started manually**, not on push or
 **UI Tests** jobs:
 
 1. **lint**: ESLint, Prettier check and TypeScript type check
-2. **test (chrome)**, **test (firefox)**, **test (mobile)**: run all UI specs in parallel and upload their results and any failure screenshots
-3. **report**: merges the three into one Allure report and publishes it to `/ui/`
+2. **test (chrome)**: runs all UI specs in Chrome and uploads the results and any failure screenshots
+3. **report**: builds the Allure report and publishes it to `/ui/`
 
 **API Tests** jobs:
 
