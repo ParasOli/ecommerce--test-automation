@@ -5,7 +5,18 @@ import prettier from 'eslint-config-prettier'
 import globals from 'globals'
 
 export default tseslint.config(
-  { ignores: ['node_modules', 'allure-results', 'allure-report', 'cypress/screenshots', 'cypress/videos'] },
+  {
+    ignores: [
+      'node_modules',
+      'allure-results',
+      'allure-report',
+      'allure-results-api',
+      'allure-report-api',
+      'site',
+      'cypress/screenshots',
+      'cypress/videos',
+    ],
+  },
   js.configs.recommended,
   ...tseslint.configs.recommended,
   pluginCypress.configs.recommended,

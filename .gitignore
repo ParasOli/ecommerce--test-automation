@@ -29,3 +29,6 @@ Thumbs.db
 # Allure
 allure-results/
 allure-report/
+allure-results-api/
+allure-report-api/
+site/

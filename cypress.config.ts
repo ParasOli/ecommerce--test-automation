@@ -15,6 +15,7 @@ export default defineConfig({
   pageLoadTimeout: 90000,
   e2e: {
     baseUrl: 'https://ecommerce-playground.lambdatest.io',
+    specPattern: 'cypress/e2e/**/*.cy.ts',
     scrollBehavior: 'center',
     setupNodeEvents(on, config) {
       allureCypress(on, config, {
