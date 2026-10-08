@@ -1,4 +1,4 @@
-import * as allure from 'allure-js-commons'
+import 'allure-cypress'
 
 describe('Booking', () => {
   const booking = {
@@ -19,13 +19,19 @@ describe('Booking', () => {
     additionalneeds: 'Lunch',
   }
 
+  let token: string
+
+  before(() => {
+    cy.request('POST', '/auth', { username: 'admin', password: 'password123' }).then((response) => {
+      token = response.body.token
+    })
+  })
+
   it('TC-BOOKING-01: health check responds', () => {
     cy.request('/ping').its('status').should('eq', 201)
   })
 
   it('TC-BOOKING-02: creates a booking', () => {
-    allure.severity('critical')
-
     cy.request('POST', '/booking', booking).then((response) => {
       expect(response.status).to.eq(200)
       expect(response.body.bookingid).to.be.a('number')
@@ -52,35 +58,29 @@ describe('Booking', () => {
   })
 
   it('TC-BOOKING-05: updates a booking with a token', () => {
-    allure.severity('critical')
-
-    cy.request('POST', '/auth', { username: 'admin', password: 'password123' }).then((auth) => {
-      cy.request('POST', '/booking', booking).then((created) => {
-        cy.request({
-          method: 'PUT',
-          url: `/booking/${created.body.bookingid}`,
-          headers: { Cookie: `token=${auth.body.token}` },
-          body: updatedBooking,
-        }).then((response) => {
-          expect(response.status).to.eq(200)
-          expect(response.body).to.deep.equal(updatedBooking)
-        })
+    cy.request('POST', '/booking', booking).then((created) => {
+      cy.request({
+        method: 'PUT',
+        url: `/booking/${created.body.bookingid}`,
+        headers: { Cookie: `token=${token}` },
+        body: updatedBooking,
+      }).then((response) => {
+        expect(response.status).to.eq(200)
+        expect(response.body).to.deep.equal(updatedBooking)
       })
     })
   })
 
   it('TC-BOOKING-06: partially updates a booking', () => {
-    cy.request('POST', '/auth', { username: 'admin', password: 'password123' }).then((auth) => {
-      cy.request('POST', '/booking', booking).then((created) => {
-        cy.request({
-          method: 'PATCH',
-          url: `/booking/${created.body.bookingid}`,
-          headers: { Cookie: `token=${auth.body.token}` },
-          body: { totalprice: 333 },
-        }).then((response) => {
-          expect(response.status).to.eq(200)
-          expect(response.body).to.deep.equal({ ...booking, totalprice: 333 })
-        })
+    cy.request('POST', '/booking', booking).then((created) => {
+      cy.request({
+        method: 'PATCH',
+        url: `/booking/${created.body.bookingid}`,
+        headers: { Cookie: `token=${token}` },
+        body: { totalprice: 333 },
+      }).then((response) => {
+        expect(response.status).to.eq(200)
+        expect(response.body).to.deep.equal({ ...booking, totalprice: 333 })
       })
     })
   })
@@ -100,21 +100,17 @@ describe('Booking', () => {
   })
 
   it('TC-BOOKING-08: deletes a booking', () => {
-    allure.severity('critical')
+    cy.request('POST', '/booking', booking).then((created) => {
+      cy.request({
+        method: 'DELETE',
+        url: `/booking/${created.body.bookingid}`,
+        headers: { Cookie: `token=${token}` },
+      }).then((response) => {
+        expect(response.status).to.eq(201)
+      })
 
-    cy.request('POST', '/auth', { username: 'admin', password: 'password123' }).then((auth) => {
-      cy.request('POST', '/booking', booking).then((created) => {
-        cy.request({
-          method: 'DELETE',
-          url: `/booking/${created.body.bookingid}`,
-          headers: { Cookie: `token=${auth.body.token}` },
-        }).then((response) => {
-          expect(response.status).to.eq(201)
-        })
-
-        cy.request({ url: `/booking/${created.body.bookingid}`, failOnStatusCode: false }).then((response) => {
-          expect(response.status).to.eq(404)
-        })
+      cy.request({ url: `/booking/${created.body.bookingid}`, failOnStatusCode: false }).then((response) => {
+        expect(response.status).to.eq(404)
       })
     })
   })
