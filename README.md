@@ -31,7 +31,7 @@ UI tests run in **Chrome** in CI. Firefox and phone-size runs are available loca
 | Auth    | [`cypress/api/auth.cy.ts`](cypress/api/auth.cy.ts)       | TC-AUTH-01 to 02: token for valid credentials, wrong password                                                                                                             |
 | Booking | [`cypress/api/booking.cy.ts`](cypress/api/booking.cy.ts) | TC-BOOKING-01 to 10: health check, create, get by id, find by name, full update, partial update, update without token, delete, booking not found, missing required fields |
 
-Each booking test is self-contained: it creates the booking it needs, with a unique last name, and makes every request inside the test.
+Everything for the API tests lives in these two spec files: no support files, helpers, fixtures or custom commands. Each booking test creates the booking it needs, with a unique last name.
 
 ## Tech stack
 
@@ -67,8 +67,7 @@ Each booking test is self-contained: it creates the booking it needs, with a uni
 │   │   └── SearchPage.ts
 │   └── support/
 │       ├── commands.ts       # cy.login() with cy.session
-│       ├── e2e.ts            # UI: Allure setup and labels
-│       └── api.ts            # API: Allure setup and labels
+│       └── e2e.ts            # UI: Allure setup and labels
 ├── dashboard/
 │   └── index.html            # Results dashboard (GitHub Pages home page)
 ├── test-cases/               # Manual test cases (one .md per feature) + their source
@@ -101,7 +100,7 @@ cp .env.example .env
 
 `USER_EMAIL` and `USER_PASSWORD` must be an account registered on the [playground site](https://ecommerce-playground.lambdatest.io/index.php?route=account/register). `.env` is git-ignored, so never commit real credentials.
 
-The API tests use Restful Booker's public demo login (`admin` / `password123`, from its documentation), written directly in the specs. They need no setup.
+The API tests use Restful Booker's public demo login (`admin` / `password123`, from its documentation), written in the specs. They need no setup.
 
 ## Running tests
 
@@ -147,7 +146,7 @@ Delete the results folder before a run if you only want that run's results in th
 Each test in the report has:
 
 - **Epic / feature:** `E-commerce UI` → `Login`, `Product Search`, `Checkout`, or `Restful Booker API` → `Auth`, `Booking`
-- **Severity:** `critical` for the main happy paths (valid login, header search, guest order, API token, create, update and delete booking), `normal` for the rest
+- **Severity:** `critical` for the main happy paths (valid login, header search, guest order), `normal` for the rest
 - **Test ID:** the TC ID as a label. UI test IDs also link to the test cases sheet.
 - **Parameters (UI):** browser and viewport, so results from different browsers or screen sizes show separately
 
@@ -256,7 +255,19 @@ cy.env(['USER_EMAIL', 'USER_PASSWORD']).then((env) => {
 })
 ```
 
-**API tests** are plain: each spec calls `cy.request()` directly and checks the status code and body. There are no page objects, custom commands, fixtures or shared setup: the request data is written in the spec, so each test can be read on its own.
+**API tests** are plain and self-contained: everything is in `cypress/api/auth.cy.ts` and `cypress/api/booking.cy.ts`. Each test calls `cy.request()` directly and checks the status code and body. There are no page objects, custom commands, helper files, fixtures or support files. The only extra line is `import 'allure-cypress'` at the top of each spec, which sends the results to the Allure report.
+
+**How the token is reused:** `booking.cy.ts` requests `/auth` once in a `before()` hook and saves the token in a `token` variable. Every test in the file that needs it (update, partial update, delete) uses that same variable, so there's one `/auth` request per run of the spec.
+
+```ts
+let token: string
+
+before(() => {
+  cy.request('POST', '/auth', { username: 'admin', password: 'password123' }).then((response) => {
+    token = response.body.token
+  })
+})
+```
 
 ```ts
 // cypress/api/booking.cy.ts

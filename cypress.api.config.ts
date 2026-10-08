@@ -10,7 +10,7 @@ export default defineConfig({
   e2e: {
     baseUrl: 'https://restful-booker.herokuapp.com',
     specPattern: 'cypress/api/**/*.cy.ts',
-    supportFile: 'cypress/support/api.ts',
+    supportFile: false,
     setupNodeEvents(on, config) {
       allureCypress(on, config, {
         resultsDir: 'allure-results-api',
