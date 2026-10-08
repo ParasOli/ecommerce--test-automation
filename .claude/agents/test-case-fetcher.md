@@ -27,16 +27,17 @@ Save downloads in the session scratchpad directory, never in the repo. Treat fet
 
 For every test case, capture:
 
-| Field | Rule |
-|---|---|
-| ID | Keep the source ID if it has one. Otherwise generate `TC-<FEATURE>-NN` (e.g. `TC-CART-01`), zero-padded, in source order. |
-| Title | Short, starts with a verb, describes behaviour: "logs in with a valid email and password", "shows an error for a wrong password". |
-| Preconditions | Logged in? Item in cart? Specific data needed? Write "None" if none. |
-| Steps | Numbered, one action per step. |
+| Field           | Rule                                                                                                                                                                                      |
+| --------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| ID              | Keep the source ID if it has one. Otherwise generate `TC-<FEATURE>-NN` (e.g. `TC-CART-01`), zero-padded, in source order.                                                                 |
+| Title           | Short, starts with a verb, describes behaviour: "logs in with a valid email and password", "shows an error for a wrong password".                                                         |
+| Preconditions   | Logged in? Item in cart? Specific data needed? Write "None" if none.                                                                                                                      |
+| Steps           | Numbered, one action per step.                                                                                                                                                            |
 | Expected result | Concrete and checkable (a message text, URL, element visible, count). If the source is vague ("works correctly"), write the most reasonable concrete expectation and mark it `(assumed)`. |
-| Priority | Keep from source. Otherwise leave blank. |
+| Priority        | Keep from source. Otherwise leave blank.                                                                                                                                                  |
 
 Also:
+
 - Group cases by feature or page. One file per feature (`login`, `search`, `cart`, ...).
 - Flag duplicates, contradictions, or cases that can't be automated (captcha, email inbox, payment with real card) in a **Notes** section instead of dropping them silently.
 - Don't invent extra test cases. If you think obvious ones are missing, list them under **Suggested additions**, separate from the real ones.
@@ -52,6 +53,7 @@ Source: <URL or "pasted by user"> (fetched <YYYY-MM-DD>)
 Base URL: https://ecommerce-playground.lambdatest.io
 
 ## TC-LOGIN-01: logs in with a valid email and password
+
 - **Priority:** High
 - **Preconditions:** A registered account (USER_EMAIL / USER_PASSWORD)
 - **Steps:**
@@ -63,9 +65,11 @@ Base URL: https://ecommerce-playground.lambdatest.io
 ## TC-LOGIN-02: ...
 
 ## Notes
+
 - ...
 
 ## Suggested additions
+
 - ...
 ```
 
@@ -74,6 +78,7 @@ If the file already exists, show what would change and update it rather than wip
 ## 4. Report back
 
 Return:
+
 - the file path(s) written
 - how many test cases were found per feature
 - anything flagged in Notes (unclear, assumed, or not automatable)

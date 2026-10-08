@@ -7,9 +7,12 @@ You automate test cases in this repo as Cypress + TypeScript tests using the Pag
 
 ## Project facts
 
-- Cypress 14, TypeScript, `baseUrl` = `https://ecommerce-playground.lambdatest.io` (an OpenCart demo site, shared by the public).
-- Credentials: `Cypress.env('USER_EMAIL')` and `Cypress.env('USER_PASSWORD')` (from `.env` locally, GitHub secrets in CI). Never hard-code credentials.
-- Allure reporting is already wired in `cypress.config.js`. Don't change reporting or the GitHub workflow unless asked.
+- Cypress 16, TypeScript, `baseUrl` = `https://ecommerce-playground.lambdatest.io` (an OpenCart demo site, shared by the public).
+- Credentials: read them with `cy.env(['USER_EMAIL', 'USER_PASSWORD']).then((env) => ...)` (Cypress 16 removed `Cypress.env()`). They come from `.env` locally and GitHub secrets in CI. Never hard-code credentials.
+- Tests that need a logged-in user call `cy.login()` (in `cypress/support/commands.ts`, uses `cy.session`) instead of logging in through the form.
+- Test data goes in `cypress/fixtures/*.json`. Expected messages go in the page object as class properties (e.g. `noMatchError = '...'`), not in fixtures or specs.
+- No comments in page objects or specs unless the user asks.
+- Allure reporting is wired in `cypress.config.ts`, and labels (epic, feature, test ID link, browser) are added in `cypress/support/e2e.ts`. For a main happy-path test, add `allure.severity('critical')` (from `allure-js-commons`) as the first line. Don't change reporting or the GitHub workflow unless asked.
 
 ## 1. Read the test cases
 
@@ -31,12 +34,12 @@ Selector preference: `#id` > `[name=...]` > a stable class scoped to the page co
 ## 3. Page objects: `cypress/pages/<PageName>.ts`
 
 - One class per page (`LoginPage`, `AccountPage`, `CartPage`, `ProductPage`), PascalCase file and class name. Name pages after the page, not the feature.
-- **Reuse existing page objects first.** Check `cypress/pages/` and add methods to an existing class rather than creating a duplicate. Don't rename or restyle files the user wrote (e.g. `productSearch.ts`); just add to them in their style.
+- **Reuse existing page objects first.** Check `cypress/pages/` and add methods to an existing class rather than creating a duplicate. The header search lives in `HomePage`, search results in `SearchPage`.
 - Structure, in this order:
   1. **Getters for elements**, returning `cy.get(...)`: `get emailInput() { return cy.get('#input-email') }`
   2. **`open()`**, which visits the route and waits for a stable element to be visible
   3. **Action methods** with typed params: `login(email: string, password: string)`, `searchFor(term: string)`
-  4. **Check methods** starting with `verify...` or `should...`: `verifyErrorMessage(message: string | RegExp)`
+  4. **Check methods** starting with `verify...`: `verifyNoMatchError()`, `verifyLoaded(term: string)`
 - `export default new <ClassName>()` at the bottom.
 - Typed params (`string`, `number`), never `any`. Use `.clear().type()` for inputs. Pass `{ log: false }` when typing passwords.
 - Hidden custom checkboxes/radios (`custom-control-input`): `.check({ force: true })` with a one-line comment explaining why.
@@ -78,16 +81,18 @@ describe('Login', () => {
 
 ```bash
 npx tsc --noEmit -p .
-env -u ELECTRON_RUN_AS_NODE npx cypress run --spec cypress/e2e/<feature>.cy.ts
+npm run lint
+env -u ELECTRON_RUN_AS_NODE npx cypress run --browser chrome --spec cypress/e2e/<feature>.cy.ts
 ```
 
 (`ELECTRON_RUN_AS_NODE` is set inside VS Code's terminal and breaks Cypress, so always unset it. If the run is blocked by a sandbox, rerun with the sandbox disabled.)
 
 When a test fails, read the error and the screenshot in `cypress/screenshots/`, then decide:
+
 - **Test bug** (wrong selector, timing, wrong expected text): fix the test and rerun.
 - **Product bug** (the site really behaves wrong vs. the expected result): do NOT weaken the assertion to make it pass silently. Either keep it failing, or if the caller wants a green suite, assert actual behaviour with a `// Note:` comment saying what the expected behaviour should be. Always list it in your report.
 
-Rerun until every test passes or each failure is explained. Run the whole suite once at the end (`env -u ELECTRON_RUN_AS_NODE npx cypress run`) to check nothing else broke.
+Rerun until every test passes or each failure is explained. Run the whole suite once at the end (`env -u ELECTRON_RUN_AS_NODE npm test`), then `npm run lint` and `npm run format:check` (fix with `npm run lint:fix` / `npm run format`) to check nothing else broke.
 
 ## 7. Report back
 
