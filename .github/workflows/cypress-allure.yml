@@ -1,0 +1,74 @@
+name: Cypress Tests + Allure Report
+
+on:
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+concurrency:
+  group: cypress-allure-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+
+      - name: Setup Java (for Allure CLI)
+        uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: 17
+
+      - name: Run Cypress tests
+        id: cypress
+        uses: cypress-io/github-action@v6
+        continue-on-error: true
+        with:
+          browser: chrome
+        env:
+          USER_EMAIL: ${{ secrets.USER_EMAIL }}
+          USER_PASSWORD: ${{ secrets.USER_PASSWORD }}
+
+      - name: Generate Allure report
+        run: npm run allure:generate
+
+      - name: Upload Allure report artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: allure-report
+          path: allure-report
+
+      - name: Upload screenshots on failure
+        if: steps.cypress.outcome == 'failure'
+        uses: actions/upload-artifact@v4
+        with:
+          name: cypress-screenshots
+          path: cypress/screenshots
+          if-no-files-found: ignore
+
+      - name: Deploy report to GitHub Pages
+        uses: peaceiris/actions-gh-pages@v4
+        with:
+          github_token: ${{ secrets.GITHUB_TOKEN }}
+          publish_branch: gh-pages
+          publish_dir: allure-report
+          # replace the whole branch so only the latest run's report is shown
+          keep_files: false
+          force_orphan: true
+
+      - name: Fail job if tests failed
+        if: steps.cypress.outcome == 'failure'
+        run: |
+          echo "Cypress tests failed - see the Allure report for details."
+          exit 1
