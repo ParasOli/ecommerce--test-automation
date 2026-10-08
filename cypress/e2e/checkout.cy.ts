@@ -9,10 +9,10 @@ describe('Checkout', () => {
   let iphone: { id: number; name: string }
 
   beforeEach(() => {
-    cy.fixture('guest').then((data) => {
+    cy.fixture('ui/guest').then((data) => {
       guest = { ...data, email: `guest_${Date.now()}@example.com` }
     })
-    cy.fixture('products').then((data) => {
+    cy.fixture('ui/products').then((data) => {
       iphone = data.iphone
     })
   })

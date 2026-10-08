@@ -1,0 +1,83 @@
+name: API Tests
+
+on:
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+concurrency:
+  group: api-tests-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  lint:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+
+      - run: npm ci
+        env:
+          CYPRESS_INSTALL_BINARY: 0
+
+      - name: Lint
+        run: npm run lint
+
+      - name: Check formatting
+        run: npm run format:check
+
+      - name: Type check
+        run: npx tsc --noEmit -p .
+
+  test:
+    runs-on: ubuntu-latest
+    concurrency:
+      group: gh-pages-deploy
+      cancel-in-progress: false
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+
+      - uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: 17
+
+      - name: Run API tests
+        id: cypress
+        uses: cypress-io/github-action@v6
+        continue-on-error: true
+        with:
+          browser: chrome
+          config-file: cypress.api.config.ts
+
+      - name: Generate Allure report
+        run: npm run allure:generate:api
+
+      - name: Upload Allure report artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: allure-report-api
+          path: allure-report-api
+
+      - name: Publish to dashboard
+        uses: ./.github/actions/publish-report
+        with:
+          suite: api
+          report-dir: allure-report-api
+          github-token: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Fail job if tests failed
+        if: steps.cypress.outcome == 'failure'
+        run: |
+          echo "API tests failed - see the Allure report for details."
+          exit 1

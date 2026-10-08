@@ -4,3 +4,6 @@ allure-report
 cypress/screenshots
 cypress/videos
 package-lock.json
+allure-results-api
+allure-report-api
+site

@@ -1,0 +1,50 @@
+name: Publish report to dashboard
+description: Publishes one Allure report under its own folder on GitHub Pages, keeps the other reports and refreshes the dashboard.
+
+inputs:
+  suite:
+    description: Folder name on GitHub Pages (ui or api)
+    required: true
+  report-dir:
+    description: Path to the generated Allure report
+    required: true
+  github-token:
+    description: Token used to push to gh-pages
+    required: true
+
+runs:
+  using: composite
+  steps:
+    - name: Build site
+      shell: bash
+      run: |
+        rm -rf site
+        mkdir -p site
+        if git ls-remote --exit-code --heads origin gh-pages > /dev/null; then
+          git fetch --depth 1 origin gh-pages
+          git worktree add --detach previous-site FETCH_HEAD
+          for dir in ui api; do
+            if [ "$dir" != "${{ inputs.suite }}" ] && [ -d "previous-site/$dir" ]; then
+              cp -r "previous-site/$dir" "site/$dir"
+            fi
+          done
+          git worktree remove --force previous-site
+        fi
+        cp dashboard/index.html site/index.html
+        cp -r "${{ inputs.report-dir }}" "site/${{ inputs.suite }}"
+        cat > "site/${{ inputs.suite }}/run.json" <<JSON
+        {
+          "runUrl": "${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}",
+          "branch": "${{ github.ref_name }}",
+          "commit": "${{ github.sha }}"
+        }
+        JSON
+
+    - name: Deploy to GitHub Pages
+      uses: peaceiris/actions-gh-pages@v4
+      with:
+        github_token: ${{ inputs.github-token }}
+        publish_branch: gh-pages
+        publish_dir: site
+        keep_files: false
+        force_orphan: true

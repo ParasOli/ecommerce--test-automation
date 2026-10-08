@@ -1,4 +1,4 @@
-name: Cypress Tests + Allure Report
+name: UI Tests
 
 on:
   workflow_dispatch:
@@ -7,7 +7,7 @@ permissions:
   contents: write
 
 concurrency:
-  group: cypress-allure-${{ github.ref }}
+  group: ui-tests-${{ github.ref }}
   cancel-in-progress: true
 
 jobs:
@@ -95,6 +95,9 @@ jobs:
     needs: test
     if: always()
     runs-on: ubuntu-latest
+    concurrency:
+      group: gh-pages-deploy
+      cancel-in-progress: false
     steps:
       - uses: actions/checkout@v4
 
@@ -125,14 +128,12 @@ jobs:
       - name: Upload Allure report artifact
         uses: actions/upload-artifact@v4
         with:
-          name: allure-report
+          name: allure-report-ui
           path: allure-report
 
-      - name: Deploy report to GitHub Pages
-        uses: peaceiris/actions-gh-pages@v4
+      - name: Publish to dashboard
+        uses: ./.github/actions/publish-report
         with:
-          github_token: ${{ secrets.GITHUB_TOKEN }}
-          publish_branch: gh-pages
-          publish_dir: allure-report
-          keep_files: false
-          force_orphan: true
+          suite: ui
+          report-dir: allure-report
+          github-token: ${{ secrets.GITHUB_TOKEN }}

@@ -1,12 +1,20 @@
 # E-commerce Test Automation
 
-End-to-end UI tests for the [LambdaTest E-commerce Playground](https://ecommerce-playground.lambdatest.io) (an OpenCart demo store), written in **Cypress + TypeScript** using the **Page Object Model**, with **Allure** reports published to **GitHub Pages**.
+Automated tests written in **Cypress + TypeScript**, with **Allure** reports published to one **GitHub Pages** dashboard:
 
-**Latest test report:** https://parasoli.github.io/ecommerce--test-automation/
+- **UI tests** for the [LambdaTest E-commerce Playground](https://ecommerce-playground.lambdatest.io) (an OpenCart demo store), using the **Page Object Model**
+- **API tests** for [Restful Booker](https://restful-booker.herokuapp.com/apidoc/index.html) (a public booking API), written as plain `cy.request()` calls
+
+**Test results dashboard:** https://parasoli.github.io/ecommerce--test-automation/
+
+- UI report: https://parasoli.github.io/ecommerce--test-automation/ui/
+- API report: https://parasoli.github.io/ecommerce--test-automation/api/
 
 **Test cases sheet:** https://docs.google.com/spreadsheets/d/1H_uBYgXPTL0s3cx396A-W7VRnHUprfkR2sP5Vly19nw/edit?pli=1&gid=1588861163#gid=1588861163
 
 ## What's covered
+
+### UI
 
 | Feature        | Spec                                                                 | Test cases                                                                                                                       |
 | -------------- | -------------------------------------------------------------------- | -------------------------------------------------------------------------------------------------------------------------------- |
@@ -14,28 +22,39 @@ End-to-end UI tests for the [LambdaTest E-commerce Playground](https://ecommerce
 | Product search | [`cypress/e2e/productSearch.cy.ts`](cypress/e2e/productSearch.cy.ts) | TC-SEARCH-01 to 05: header search, search page, search within a category, search in descriptions, no results                     |
 | Checkout       | [`cypress/e2e/checkout.cy.ts`](cypress/e2e/checkout.cy.ts)           | TC-CHECKOUT-01 to 04: empty cart, guest order, empty guest details, Terms & Conditions not accepted                              |
 
-Every test runs in **Chrome**, **Firefox** and **Chrome at phone size (375×812)** in CI.
+Every UI test runs in **Chrome**, **Firefox** and **Chrome at phone size (375×812)** in CI.
+
+### API
+
+| Area    | Spec                                                     | Test cases                                                                                                                                                                |
+| ------- | -------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| Auth    | [`cypress/api/auth.cy.ts`](cypress/api/auth.cy.ts)       | TC-AUTH-01 to 02: token for valid credentials, wrong password                                                                                                             |
+| Booking | [`cypress/api/booking.cy.ts`](cypress/api/booking.cy.ts) | TC-BOOKING-01 to 10: health check, create, get by id, find by name, full update, partial update, update without token, delete, booking not found, missing required fields |
+
+Each booking test is self-contained: it creates the booking it needs, with a unique last name, and makes every request inside the test.
 
 ## Tech stack
 
 - [Cypress 16](https://www.cypress.io/) with TypeScript
-- Page Object Model (`cypress/pages/`) and fixtures for test data (`cypress/fixtures/`)
+- Page Object Model for UI (`cypress/pages/`), plain `cy.request()` specs for API, fixtures for test data (`cypress/fixtures/`)
 - [Allure](https://allurereport.org/) reports via `allure-cypress`, with feature, severity and test case labels
 - ESLint + Prettier for code style
-- GitHub Actions + GitHub Pages for CI and report hosting
+- GitHub Actions (one workflow for UI, one for API) + a GitHub Pages dashboard
 
 ## Project structure
 
 ```
 .
 ├── cypress/
-│   ├── e2e/                  # Test specs (one file per feature)
+│   ├── e2e/                  # UI specs (one file per feature)
 │   │   ├── checkout.cy.ts
 │   │   ├── login.cy.ts
 │   │   └── productSearch.cy.ts
+│   ├── api/                  # API specs
+│   │   ├── auth.cy.ts
+│   │   └── booking.cy.ts
 │   ├── fixtures/             # Test data
-│   │   ├── guest.json
-│   │   └── products.json
+│   │   └── ui/               # guest.json, products.json
 │   ├── pages/                # Page objects (selectors + actions + checks + expected messages)
 │   │   ├── AccountPage.ts
 │   │   ├── CartPage.ts
@@ -48,12 +67,19 @@ Every test runs in **Chrome**, **Firefox** and **Chrome at phone size (375×812)
 │   │   └── SearchPage.ts
 │   └── support/
 │       ├── commands.ts       # cy.login() with cy.session
-│       └── e2e.ts            # Allure setup and labels
+│       ├── e2e.ts            # UI: Allure setup and labels
+│       └── api.ts            # API: Allure setup and labels
+├── dashboard/
+│   └── index.html            # Results dashboard (GitHub Pages home page)
 ├── test-cases/               # Manual test cases (one .md per feature) + their source
-├── .github/workflows/
-│   └── cypress-allure.yml    # Lint, run tests on 3 browsers, publish Allure report
+├── .github/
+│   ├── workflows/
+│   │   ├── ui-tests.yml      # Lint, UI tests on 3 browsers, publish to /ui/
+│   │   └── api-tests.yml     # Lint, API tests, publish to /api/
+│   └── actions/publish-report/  # Shared step that updates the dashboard
 ├── .claude/agents/           # Claude Code agents (see below)
-├── cypress.config.ts         # Base URL, env vars, retries, timeouts, Allure reporter
+├── cypress.config.ts         # UI: base URL, env vars, retries, timeouts, Allure
+├── cypress.api.config.ts     # API: base URL, retries, Allure
 ├── eslint.config.mjs         # ESLint rules
 ├── .prettierrc.json          # Prettier rules
 ├── .env.example              # Template for local credentials
@@ -75,17 +101,21 @@ cp .env.example .env
 
 `USER_EMAIL` and `USER_PASSWORD` must be an account registered on the [playground site](https://ecommerce-playground.lambdatest.io/index.php?route=account/register). `.env` is git-ignored, so never commit real credentials.
 
+The API tests use Restful Booker's public demo login (`admin` / `password123`, from its documentation), written directly in the specs. They need no setup.
+
 ## Running tests
 
 ```bash
-npm test                                                     # all specs in Chrome
-npm run test:firefox                                         # all specs in Firefox
-npm run test:mobile                                          # all specs in Chrome at phone size
-npx cypress run --browser chrome --spec cypress/e2e/login.cy.ts   # one spec
-npx cypress open                                             # open the Cypress UI
+npm test                                                     # UI specs in Chrome
+npm run test:firefox                                         # UI specs in Firefox
+npm run test:mobile                                          # UI specs in Chrome at phone size
+npm run test:api                                             # API specs
+npx cypress run --browser chrome --spec cypress/e2e/login.cy.ts   # one UI spec
+npx cypress open                                             # open the Cypress UI (UI tests)
+npx cypress open --config-file cypress.api.config.ts         # open the Cypress UI (API tests)
 ```
 
-Failed tests are retried once in `cypress run` (not in `cypress open`), because the demo site is public and can be slow.
+Failed tests are retried once in `cypress run` (not in `cypress open`), because both demo sites are public and can be slow.
 
 > **Running from VS Code's terminal?** VS Code sets `ELECTRON_RUN_AS_NODE`, which stops Cypress from starting. Prefix the command with `env -u ELECTRON_RUN_AS_NODE`, for example `env -u ELECTRON_RUN_AS_NODE npm test`.
 
@@ -103,41 +133,57 @@ CI fails if lint, formatting or the TypeScript type check fails.
 ## Allure report
 
 ```bash
-npm test                    # writes results to allure-results/
-npm run allure:generate     # builds the HTML report in allure-report/
-npm run allure:open         # opens it in your browser
+npm test                        # UI: writes results to allure-results/
+npm run allure:generate         # builds the UI report in allure-report/
+npm run allure:open             # opens it in your browser
+
+npm run test:api                # API: writes results to allure-results-api/
+npm run allure:generate:api     # builds the API report in allure-report-api/
+npm run allure:open:api         # opens it in your browser
 ```
 
-Delete `allure-results/` before a run if you only want that run's results in the report.
+Delete the results folder before a run if you only want that run's results in the report.
 
 Each test in the report has:
 
-- **Epic / feature:** `E-commerce UI` → `Login`, `Product Search` or `Checkout`
-- **Severity:** `critical` for the main happy paths (valid login, header search, guest order), `normal` for the rest
-- **Test case link:** the TC ID links to the test cases sheet
-- **Parameters:** browser and viewport, so the Chrome, Firefox and mobile results show separately
+- **Epic / feature:** `E-commerce UI` → `Login`, `Product Search`, `Checkout`, or `Restful Booker API` → `Auth`, `Booking`
+- **Severity:** `critical` for the main happy paths (valid login, header search, guest order, API token, create, update and delete booking), `normal` for the rest
+- **Test ID:** the TC ID as a label. UI test IDs also link to the test cases sheet.
+- **Parameters (UI):** browser and viewport, so the Chrome, Firefox and mobile results show separately
 
-## CI: GitHub Actions + GitHub Pages
+## CI: GitHub Actions + dashboard
 
-The workflow [`.github/workflows/cypress-allure.yml`](.github/workflows/cypress-allure.yml) runs **only when started manually**, not on push or merge.
+There are two workflows. Both run **only when started manually**, not on push or merge.
 
-**To run it:** go to **Actions** → **Cypress Tests + Allure Report** → **Run workflow**, then pick a branch.
+| Workflow  | File                                                                 | Publishes to |
+| --------- | -------------------------------------------------------------------- | ------------ |
+| UI Tests  | [`.github/workflows/ui-tests.yml`](.github/workflows/ui-tests.yml)   | `/ui/`       |
+| API Tests | [`.github/workflows/api-tests.yml`](.github/workflows/api-tests.yml) | `/api/`      |
 
-Each run has these jobs:
+**To run one:** go to **Actions** → **UI Tests** or **API Tests** → **Run workflow**, then pick a branch.
+
+**UI Tests** jobs:
 
 1. **lint**: ESLint, Prettier check and TypeScript type check
-2. **test (chrome)**, **test (firefox)**, **test (mobile)**: run all specs in parallel and upload their results and any failure screenshots
-3. **report**: merges the results from all three into one Allure report, uploads it as an artifact and publishes it to GitHub Pages, **replacing the previous report**
+2. **test (chrome)**, **test (firefox)**, **test (mobile)**: run all UI specs in parallel and upload their results and any failure screenshots
+3. **report**: merges the three into one Allure report and publishes it to `/ui/`
 
-The run is marked as failed if lint fails or any test fails, but the report is still published so failures are visible.
+**API Tests** jobs:
+
+1. **lint**: same checks as above
+2. **test**: runs all API specs, builds the Allure report and publishes it to `/api/`
+
+**The dashboard** ([`dashboard/index.html`](dashboard/index.html)) is the GitHub Pages home page. It shows one card each for UI and API: pass rate, passed, failed, broken and skipped counts, when the run finished, how long it took, the branch and commit, and links to the full Allure report and the GitHub Actions run.
+
+Each workflow replaces **only its own report** (the previous UI or API report is removed), keeps the other one, and refreshes the dashboard. A run is marked as failed if lint fails or any test fails, but the report is still published so failures are visible.
 
 **One-time setup** (already done for this repo):
 
 1. **Settings → Secrets and variables → Actions**: add `USER_EMAIL` and `USER_PASSWORD`
 2. **Settings → Actions → General**: set Workflow permissions to **Read and write**
-3. Run the workflow once, then **Settings → Pages**: Source **Deploy from a branch**, branch `gh-pages`, folder `/ (root)`
+3. Run a workflow once, then **Settings → Pages**: Source **Deploy from a branch**, branch `gh-pages`, folder `/ (root)`
 
-## Writing tests: Page Object Model
+## Writing tests
 
 Each page gets one class in `cypress/pages/`. It holds the page's selectors, the actions a user can take, the checks for that page and the messages it expects. Specs only call page methods and never use `cy.get` directly. Test data that changes between tests goes in `cypress/fixtures/`.
 
@@ -210,6 +256,18 @@ cy.env(['USER_EMAIL', 'USER_PASSWORD']).then((env) => {
 })
 ```
 
+**API tests** are plain: each spec calls `cy.request()` directly and checks the status code and body. There are no page objects, custom commands, fixtures or shared setup: the request data is written in the spec, so each test can be read on its own.
+
+```ts
+// cypress/api/booking.cy.ts
+it('TC-BOOKING-09: returns 404 for a booking that does not exist', () => {
+  cy.request({ url: '/booking/999999999', failOnStatusCode: false }).then((response) => {
+    expect(response.status).to.eq(404)
+    expect(response.body).to.eq('Not Found')
+  })
+})
+```
+
 **Conventions**
 
 - Page files and classes are named after the **page** (`LoginPage`). Spec files are named after the **feature** (`login.cy.ts`).
@@ -231,7 +289,9 @@ This repo includes three [Claude Code](https://claude.com/claude-code) agents in
 
 The simplest way to use them is to ask Claude Code: _"Automate the test cases in &lt;URL&gt;"_. It runs the fetcher, then the automator. The test cases sheet is saved in [`test-cases/README.md`](test-cases/README.md), so _"Fetch the test cases from the sheet in test-cases/README.md"_ also works. Google Sheets must be readable through the Google Drive connector or shared as "Anyone with the link can view".
 
-## Known issues on the demo site
+## Known issues
+
+### E-commerce Playground
 
 - **Login lockout:** an email is locked for 1 hour after 5 failed logins. Negative tests use unique emails. The empty-email test accepts the lockout message, because everyone using the public site shares that "account".
 - **Category filter:** searching within a category does not narrow results (for example "iphone" in _Software_ still returns the iPhone). TC-SEARCH-03 checks that the category is applied but can't check filtering.
@@ -240,3 +300,11 @@ The simplest way to use them is to ask Claude Code: _"Automate the test cases in
 - **Empty checkout form:** pressing Continue with every checkout field empty makes the server return a PHP notice before its JSON, so the page shows a "not valid JSON" error and no field errors. TC-CHECKOUT-03 fills the address so only the four personal fields are empty.
 - **Mobile header:** on small screens the desktop header search is hidden and a second search box is shown. `HomePage` uses whichever one is visible.
 - **Shared public site:** the site can be slow or change data while tests run, so `cypress run` retries a failed test once and commands wait up to 8 seconds.
+
+### Restful Booker API
+
+- **Bad login returns 200:** a wrong password returns `200` with `{"reason": "Bad credentials"}`, not `401`. This matches the API's documentation, so TC-AUTH-02 checks for it.
+- **DELETE returns 201 Created:** documented by the API, so TC-BOOKING-08 checks for `201`. Deleting the same booking twice returns `405`, not `404`.
+- **Missing fields cause a server error:** creating a booking without the required fields returns `500 Internal Server Error`, not `400`. TC-BOOKING-10 only checks that the booking is rejected.
+- **No input validation:** the API accepts a negative price and a checkout date before the check-in date.
+- **Shared data:** anyone can create or delete bookings, and the API resets itself regularly. Tests create their own bookings with a unique last name, so they don't depend on existing data.

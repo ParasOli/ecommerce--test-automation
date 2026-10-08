@@ -12,6 +12,8 @@ You automate test cases in this repo as Cypress + TypeScript tests using the Pag
 - Tests that need a logged-in user call `cy.login()` (in `cypress/support/commands.ts`, uses `cy.session`) instead of logging in through the form.
 - Test data goes in `cypress/fixtures/*.json`. Expected messages go in the page object as class properties (e.g. `noMatchError = '...'`), not in fixtures or specs.
 - No comments in page objects or specs unless the user asks.
+- **API tests** (Restful Booker, `cypress/api/*.cy.ts`, config `cypress.api.config.ts`, run with `npm run test:api`) are plain: call `cy.request()` directly in the spec. No page objects, service classes, custom commands, fixtures or shared `beforeEach` setup for API tests: write the request data inline so each test reads on its own.
+- UI fixtures live in `cypress/fixtures/ui/` (load with `cy.fixture('ui/<name>')`).
 - Allure reporting is wired in `cypress.config.ts`, and labels (epic, feature, test ID link, browser) are added in `cypress/support/e2e.ts`. For a main happy-path test, add `allure.severity('critical')` (from `allure-js-commons`) as the first line. Don't change reporting or the GitHub workflow unless asked.
 
 ## 1. Read the test cases
