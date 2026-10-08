@@ -39,11 +39,9 @@ class productSearch{
         this.categoryDropdown.select(category)
     }
     checkSearchInDescription(){
-        // the real checkbox is hidden behind a styled one, so force the check
         this.searchInDescriptionCheckbox.check({ force: true })
     }
     shouldBeOnResultsPage(term:string){
-        // header search encodes the route as product%2Fsearch, the search form does not
         cy.url().should((url)=>{
             expect(decodeURIComponent(url)).to.include('route=product/search').and.include(`search=${term}`)
         })

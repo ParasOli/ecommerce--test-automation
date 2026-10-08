@@ -1,10 +1,12 @@
 import productSearch from "../pages/productSearch"
 
 describe('Product Search', () => {
+  beforeEach(()=>{
+    cy.visit('/')
+  })
 
   it('TC-SEARCH-01: finds products by keyword from the header search bar', () => {
     const term = 'iphone'
-    cy.visit('/')
 
     productSearch.navSearch(term)
 
@@ -23,8 +25,6 @@ describe('Product Search', () => {
   })
 
   it('TC-SEARCH-03: finds products by keyword within a category', () => {
-    // Note: the demo site does not actually narrow results by category,
-    // so this checks the category is applied, not that others are filtered out.
     const term = 'ipod'
     productSearch.open()
 
