@@ -1,0 +1,356 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Test Results Dashboard</title>
+    <style>
+      :root {
+        --bg: #f6f7f9;
+        --card: #ffffff;
+        --text: #1b1f24;
+        --muted: #5f6b7a;
+        --border: #e3e7ec;
+        --passed: #1f9d55;
+        --failed: #d64545;
+        --broken: #e0a100;
+        --skipped: #8a94a3;
+        --link: #2563eb;
+        --shadow: 0 1px 2px rgba(16, 24, 40, 0.06), 0 1px 3px rgba(16, 24, 40, 0.1);
+      }
+
+      @media (prefers-color-scheme: dark) {
+        :root {
+          --bg: #0f1216;
+          --card: #171b21;
+          --text: #e7ebf0;
+          --muted: #9aa5b4;
+          --border: #262c35;
+          --passed: #3ccf7e;
+          --failed: #ff6b6b;
+          --broken: #f5c04a;
+          --skipped: #8a94a3;
+          --link: #7aa7ff;
+          --shadow: none;
+        }
+      }
+
+      * {
+        box-sizing: border-box;
+      }
+
+      body {
+        margin: 0;
+        background: var(--bg);
+        color: var(--text);
+        font:
+          15px/1.5 system-ui,
+          -apple-system,
+          'Segoe UI',
+          Roboto,
+          sans-serif;
+      }
+
+      main {
+        max-width: 960px;
+        margin: 0 auto;
+        padding: 40px 16px 56px;
+      }
+
+      header h1 {
+        margin: 0 0 4px;
+        font-size: 26px;
+      }
+
+      header p {
+        margin: 0;
+        color: var(--muted);
+      }
+
+      .grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+        gap: 20px;
+        margin-top: 28px;
+      }
+
+      .card {
+        background: var(--card);
+        border: 1px solid var(--border);
+        border-radius: 12px;
+        box-shadow: var(--shadow);
+        padding: 22px;
+        display: flex;
+        flex-direction: column;
+        gap: 16px;
+      }
+
+      .card-head {
+        display: flex;
+        justify-content: space-between;
+        align-items: flex-start;
+        gap: 12px;
+      }
+
+      .card-head h2 {
+        margin: 0;
+        font-size: 19px;
+      }
+
+      .card-head .sub {
+        color: var(--muted);
+        font-size: 13px;
+      }
+
+      .badge {
+        flex-shrink: 0;
+        font-size: 12px;
+        font-weight: 600;
+        padding: 3px 10px;
+        border-radius: 999px;
+        border: 1px solid currentColor;
+      }
+
+      .badge.passed {
+        color: var(--passed);
+      }
+
+      .badge.failed {
+        color: var(--failed);
+      }
+
+      .badge.none {
+        color: var(--skipped);
+      }
+
+      [data-field='body'] {
+        display: grid;
+        gap: 14px;
+      }
+
+      .rate {
+        font-size: 34px;
+        font-weight: 700;
+        line-height: 1;
+      }
+
+      .rate small {
+        font-size: 14px;
+        font-weight: 500;
+        color: var(--muted);
+      }
+
+      .bar {
+        display: flex;
+        height: 8px;
+        border-radius: 999px;
+        overflow: hidden;
+        background: var(--border);
+      }
+
+      .bar span {
+        display: block;
+        height: 100%;
+      }
+
+      .counts {
+        display: grid;
+        grid-template-columns: repeat(4, 1fr);
+        gap: 8px;
+        margin: 0;
+      }
+
+      .counts div {
+        text-align: center;
+      }
+
+      .counts dt {
+        font-size: 12px;
+        color: var(--muted);
+      }
+
+      .counts dd {
+        margin: 0;
+        font-size: 18px;
+        font-weight: 600;
+      }
+
+      .meta {
+        margin: 0;
+        display: grid;
+        grid-template-columns: auto 1fr;
+        gap: 4px 12px;
+        font-size: 13px;
+      }
+
+      .meta dt {
+        color: var(--muted);
+      }
+
+      .meta dd {
+        margin: 0;
+        overflow-wrap: anywhere;
+      }
+
+      .actions {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 10px;
+        margin-top: auto;
+      }
+
+      .actions a {
+        flex: 1 1 auto;
+        text-align: center;
+        text-decoration: none;
+        font-weight: 600;
+        font-size: 14px;
+        padding: 10px 14px;
+        border-radius: 8px;
+        border: 1px solid var(--border);
+        color: var(--link);
+      }
+
+      .actions a.primary {
+        background: var(--link);
+        border-color: var(--link);
+        color: var(--card);
+      }
+
+      .actions a[aria-disabled='true'] {
+        pointer-events: none;
+        opacity: 0.5;
+      }
+
+      .empty {
+        color: var(--muted);
+        margin: 0;
+      }
+
+      footer {
+        margin-top: 32px;
+        color: var(--muted);
+        font-size: 13px;
+      }
+
+      footer a {
+        color: var(--link);
+      }
+    </style>
+  </head>
+  <body>
+    <main>
+      <header>
+        <h1>Test Results Dashboard</h1>
+        <p>Latest automated test results for the e-commerce UI and the Restful Booker API.</p>
+      </header>
+
+      <section class="grid">
+        <article class="card" data-suite="ui">
+          <div class="card-head">
+            <div>
+              <h2>UI Automation</h2>
+              <div class="sub">LambdaTest E-commerce Playground · Chrome</div>
+            </div>
+            <span class="badge none" data-field="badge">No run yet</span>
+          </div>
+          <div data-field="body"><p class="empty">Loading…</p></div>
+          <div class="actions">
+            <a class="primary" href="ui/" data-field="report">Open UI report</a>
+            <a href="#" data-field="run" aria-disabled="true">View CI run</a>
+          </div>
+        </article>
+
+        <article class="card" data-suite="api">
+          <div class="card-head">
+            <div>
+              <h2>API Automation</h2>
+              <div class="sub">Restful Booker · auth and booking endpoints</div>
+            </div>
+            <span class="badge none" data-field="badge">No run yet</span>
+          </div>
+          <div data-field="body"><p class="empty">Loading…</p></div>
+          <div class="actions">
+            <a class="primary" href="api/" data-field="report">Open API report</a>
+            <a href="#" data-field="run" aria-disabled="true">View CI run</a>
+          </div>
+        </article>
+      </section>
+
+      <footer>
+        Source:
+        <a href="https://github.com/ParasOli/ecommerce--test-automation">ParasOli/ecommerce--test-automation</a>
+      </footer>
+    </main>
+
+    <script>
+      const formatDuration = (ms) => {
+        const seconds = Math.round(ms / 1000)
+        return seconds < 60 ? `${seconds}s` : `${Math.floor(seconds / 60)}m ${seconds % 60}s`
+      }
+
+      const formatDate = (ms) => new Date(ms).toLocaleString(undefined, { dateStyle: 'medium', timeStyle: 'short' })
+
+      const getJson = async (url) => {
+        const response = await fetch(`${url}?t=${Date.now()}`)
+        if (!response.ok) throw new Error(`${url}: ${response.status}`)
+        return response.json()
+      }
+
+      const renderSuite = async (card) => {
+        const suite = card.dataset.suite
+        const field = (name) => card.querySelector(`[data-field="${name}"]`)
+
+        let summary
+        try {
+          summary = await getJson(`${suite}/widgets/summary.json`)
+        } catch {
+          field('body').innerHTML = '<p class="empty">No results yet. Run the workflow to publish a report.</p>'
+          field('report').setAttribute('aria-disabled', 'true')
+          return
+        }
+
+        const s = summary.statistic
+        const problems = s.failed + s.broken
+        const rate = s.total ? Math.round((s.passed / s.total) * 100) : 0
+        const badge = field('badge')
+        badge.textContent = problems ? `${problems} failing` : 'All passing'
+        badge.className = `badge ${problems ? 'failed' : 'passed'}`
+
+        const segment = (count, color) =>
+          count ? `<span style="width:${(count / s.total) * 100}%;background:var(--${color})"></span>` : ''
+
+        field('body').innerHTML = `
+          <div class="rate">${rate}% <small>passed (${s.passed}/${s.total})</small></div>
+          <div class="bar" role="img" aria-label="${s.passed} passed, ${s.failed} failed, ${s.broken} broken, ${s.skipped} skipped">
+            ${segment(s.passed, 'passed')}${segment(s.failed, 'failed')}${segment(s.broken, 'broken')}${segment(s.skipped, 'skipped')}
+          </div>
+          <dl class="counts">
+            <div><dt>Passed</dt><dd style="color:var(--passed)">${s.passed}</dd></div>
+            <div><dt>Failed</dt><dd style="color:var(--failed)">${s.failed}</dd></div>
+            <div><dt>Broken</dt><dd style="color:var(--broken)">${s.broken}</dd></div>
+            <div><dt>Skipped</dt><dd style="color:var(--skipped)">${s.skipped}</dd></div>
+          </dl>
+          <dl class="meta" data-field="meta">
+            <dt>Finished</dt><dd>${formatDate(summary.time.stop)}</dd>
+            <dt>Duration</dt><dd>${formatDuration(summary.time.duration)}</dd>
+          </dl>`
+
+        try {
+          const run = await getJson(`${suite}/run.json`)
+          field('meta').insertAdjacentHTML(
+            'beforeend',
+            `<dt>Branch</dt><dd>${run.branch}</dd><dt>Commit</dt><dd>${run.commit.slice(0, 7)}</dd>`,
+          )
+          const runLink = field('run')
+          runLink.href = run.runUrl
+          runLink.removeAttribute('aria-disabled')
+        } catch {
+          return
+        }
+      }
+
+      document.querySelectorAll('[data-suite]').forEach(renderSuite)
+    </script>
+  </body>
+</html>
