@@ -2,5 +2,9 @@
   "iphone": {
     "id": 40,
     "name": "iPhone"
+  },
+  "htcTouchHd": {
+    "id": 28,
+    "name": "HTC Touch HD"
   }
 }
