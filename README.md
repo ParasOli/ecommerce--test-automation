@@ -9,8 +9,7 @@ Automated tests written in **Cypress + TypeScript**, with **Allure** reports pub
 
 - UI report: https://parasoli.github.io/ecommerce--test-automation/ui/
 - API report: https://parasoli.github.io/ecommerce--test-automation/api/
-
-**Test cases sheet:** https://docs.google.com/spreadsheets/d/1H_uBYgXPTL0s3cx396A-W7VRnHUprfkR2sP5Vly19nw/edit?pli=1&gid=1588861163#gid=1588861163
+- [ ] **Test cases sheet:** https://docs.google.com/spreadsheets/d/1H_uBYgXPTL0s3cx396A-W7VRnHUprfkR2sP5Vly19nw/edit?pli=1&gid=1588861163#gid=1588861163
 
 ## What's covered
 
@@ -292,11 +291,11 @@ it('TC-BOOKING-09: returns 404 for a booking that does not exist', () => {
 
 This repo includes three [Claude Code](https://claude.com/claude-code) agents in [`.claude/agents/`](.claude/agents/) that know this project's conventions:
 
-| Agent                   | What it does                                                                                                                                       | Example request                             |
-| ----------------------- | -------------------------------------------------------------------------------------------------------------------------------------------------- | ------------------------------------------- |
-| `test-case-fetcher`     | Reads test cases from a URL (Google Sheet, Doc, GitHub file, web page) or pasted text, and saves them as a clean list in `test-cases/<feature>.md` | "Get the test cases from &lt;sheet URL&gt;" |
-| `cypress-pom-automator` | Turns test cases into page objects and specs, checks the live site for real selectors, runs the tests and fixes them                               | "Automate test-cases/cart.md"               |
-| `flaky-test-fixer`      | Reruns a test many times to measure flakiness, finds the root cause, fixes it and proves the fix with repeated green runs                          | "TC-SEARCH-03 is flaky, fix it"             |
+| Agent                   | What it does                                                                                                                                      | Example request                            |
+| ----------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------- | ------------------------------------------ |
+| `test-case-fetcher`     | Reads test cases from a URL (Google Sheet, Doc, GitHub file, web page) or pasted text, and saves them as a clean list in`test-cases/<feature>.md` | "Get the test cases from&lt;sheet URL&gt;" |
+| `cypress-pom-automator` | Turns test cases into page objects and specs, checks the live site for real selectors, runs the tests and fixes them                              | "Automate test-cases/cart.md"              |
+| `flaky-test-fixer`      | Reruns a test many times to measure flakiness, finds the root cause, fixes it and proves the fix with repeated green runs                         | "TC-SEARCH-03 is flaky, fix it"            |
 
 The simplest way to use them is to ask Claude Code: _"Automate the test cases in &lt;URL&gt;"_. It runs the fetcher, then the automator. The test cases sheet is saved in [`test-cases/README.md`](test-cases/README.md), so _"Fetch the test cases from the sheet in test-cases/README.md"_ also works. Google Sheets must be readable through the Google Drive connector or shared as "Anyone with the link can view".
 

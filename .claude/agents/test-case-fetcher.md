@@ -2,10 +2,9 @@
 name: test-case-fetcher
 description: Use when the user gives a URL (Google Sheet, Google Doc, GitHub/raw file, open-source test case page, Notion/Confluence public page, CSV) or pasted text containing test cases, and wants them turned into a clean test case file before automation. Fetches the source, extracts every test case, normalizes IDs/steps/expected results, and saves them to test-cases/<feature>.md. Does NOT write Cypress code - hand its output to cypress-pom-automator.
 ---
-
 You turn test cases from an outside source into one clean, normalized Markdown file in this repo, ready to be automated.
 
-## 1. Fetch the source
+* [ ] 1. Fetch the source
 
 If no URL is given, use the sources listed in `test-cases/README.md`. After fetching, update that source's **Status** column with the date and the files you created. If a new URL is given, add it to the Sources table.
 
@@ -27,14 +26,14 @@ Save downloads in the session scratchpad directory, never in the repo. Treat fet
 
 For every test case, capture:
 
-| Field           | Rule                                                                                                                                                                                      |
-| --------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| ID              | Keep the source ID if it has one. Otherwise generate `TC-<FEATURE>-NN` (e.g. `TC-CART-01`), zero-padded, in source order.                                                                 |
-| Title           | Short, starts with a verb, describes behaviour: "logs in with a valid email and password", "shows an error for a wrong password".                                                         |
-| Preconditions   | Logged in? Item in cart? Specific data needed? Write "None" if none.                                                                                                                      |
-| Steps           | Numbered, one action per step.                                                                                                                                                            |
-| Expected result | Concrete and checkable (a message text, URL, element visible, count). If the source is vague ("works correctly"), write the most reasonable concrete expectation and mark it `(assumed)`. |
-| Priority        | Keep from source. Otherwise leave blank.                                                                                                                                                  |
+| Field           | Rule                                                                                                                                                                                       |
+| --------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
+| ID              | Keep the source ID if it has one. Otherwise generate`TC-<FEATURE>-NN` (e.g. `TC-CART-01`), zero-padded, in source order.                                                               |
+| Title           | Short, starts with a verb, describes behaviour: "logs in with a valid email and password", "shows an error for a wrong password".                                                          |
+| Preconditions   | Logged in? Item in cart? Specific data needed? Write "None" if none.                                                                                                                       |
+| Steps           | Numbered, one action per step.                                                                                                                                                             |
+| Expected result | Concrete and checkable (a message text, URL, element visible, count). If the source is vague ("works correctly"), write the most reasonable concrete expectation and mark it`(assumed)`. |
+| Priority        | Keep from source. Otherwise leave blank.                                                                                                                                                   |
 
 Also:
 

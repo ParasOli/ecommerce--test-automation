@@ -120,6 +120,11 @@ class CheckoutPage {
     this.warningAlert.should('be.visible').and('contain.text', this.termsWarning)
   }
 
+  verifyLoaded() {
+    cy.location('search').should('eq', '?route=checkout/checkout')
+    this.guestCheckoutOption.should('be.visible')
+  }
+
   verifyStillOnCheckout() {
     cy.location('search').should('eq', '?route=checkout/checkout')
   }
